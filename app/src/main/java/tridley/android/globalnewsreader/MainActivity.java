@@ -12,8 +12,11 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.Xml;
+import android.text.TextWatcher;
+import android.text.Editable;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -32,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private Button mFetchFeedButton;
     private SwipeRefreshLayout mSwipeLayout;
+    private EditText mSearchKeyword;
+    private String searchKeyword;
 
     private List<RssFeedModel> mFeedModelList;
 
@@ -43,8 +48,26 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         mFetchFeedButton = (Button) findViewById(R.id.fetchFeedButton);
         mSwipeLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
+        mSearchKeyword = (EditText) findViewById(R.id.searchKeywordText);
+        //mSearchKeyword.setHint();
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        mSearchKeyword.addTextChangedListener(new TextWatcher() {
+
+            public void afterTextChanged(Editable s) {
+                //TODO Auto-generated method stub
+            }
+
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                //TODO Auto-generated method stub
+            }
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                //set country search keyword
+                searchKeyword = mSearchKeyword.getText().toString();
+            }
+        });
 
         mFetchFeedButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
         String description = null;
         boolean isItem = false;
         List<RssFeedModel> items = new ArrayList<>();
+        items.clear();
 
         try {
             XmlPullParser xmlPullParser = Xml.newPullParser();
@@ -112,23 +136,34 @@ public class MainActivity extends AppCompatActivity {
                     title = result;
                 } else if (name.equalsIgnoreCase("link")) {
                     link = result;
+                    Log.w("app", link);
                 } else if (name.equalsIgnoreCase("description")) {
                     description = result;
                 }
 
-                if (title != null && link != null && description != null) {
+                if (title != null && link != null && description != null && isItem != false) {
+                    //if statement to search for keyword country
+                    if(title.toLowerCase().contains(searchKeyword) || description.toLowerCase().contains(searchKeyword)){
 
+                         RssFeedModel item = new RssFeedModel(title, link, description);
+                         items.add(item);
 
-                    //add keyword here
+                         title = null;
+                         link = null;
+                         description = null;
+                         isItem = false;
+                    }
 
-                    RssFeedModel item = new RssFeedModel(title, link, description);
-                    items.add(item);
+                    else {
 
-                    title = null;
-                    link = null;
-                    description = null;
-                    isItem = false;
+                        title = null;
+                        link = null;
+                        description = null;
+                        isItem = false;
+                    }
+
                 }
+
             }
 
             return items;
@@ -140,13 +175,11 @@ public class MainActivity extends AppCompatActivity {
     private class FetchFeedTask extends AsyncTask<Void, Void, Boolean> {
 
         private String urlLink;
-        private String titleKeywords;
 
         @Override
         protected void onPreExecute() {
             mSwipeLayout.setRefreshing(true);
             urlLink = "http://feeds.bbci.co.uk/news/world/rss.xml";
-            titleKeywords = "America";
 
         }
 

@@ -40,12 +40,19 @@ public class RssFeedListAdapter
 
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_rss_feed, parent, false);
         final FeedModelViewHolder holder = new FeedModelViewHolder(v);
+        final int finalPosition = getItemCount()-1;
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 final int position = holder.getAdapterPosition();
-                urlArticleLink = mRssFeedModels.get(position+1).link;
+
+                if(position == finalPosition){
+                    urlArticleLink = mRssFeedModels.get(position).link;
+                }
+                else {
+                    urlArticleLink = mRssFeedModels.get(position+1).link;
+                }
 
                 Intent intent = new Intent(view.getContext(), PostViewActivity.class);
                 view.getContext().startActivity(intent);
@@ -71,11 +78,5 @@ public class RssFeedListAdapter
 
         return mRssFeedModels.size();
     }
-
-    /*if(position == 0)
-            urlArticleLink = "http://www.bbc.co.uk/news";
-        else if(position == 1)
-            urlArticleLink = "http://www.bbc.co.uk/news";
-        else*/
 
 }
